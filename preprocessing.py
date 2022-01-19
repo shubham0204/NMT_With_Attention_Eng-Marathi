@@ -42,8 +42,8 @@ class CorpusProcessor:
         return out
 
     def merge_two_dicts(self, x, y):
-        z = x.copy()  # start with keys and values of x
-        z.update(y)  # modifies z with keys and values of y
+        z = x.copy()
+        z.update(y)
         return z
 
     def build_vocab( self , corpus ):

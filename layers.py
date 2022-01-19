@@ -1,17 +1,27 @@
 
 from tensorflow.keras.layers import GRU , Embedding , Dense , Input
+from attention import DotProductAttention
 import tensorflow as tf
 
+"""
+An encoder model which transforms the input sequences into a intermediate representation.
+The model takes a fixed length sequence of shape ( max_len , ) and produces two outputs,
+-> enc_hidden_state: The hidden state of the GRU of shape ( enc_units , )
+-> enc_outputs: The outputs of the GRU cell at each timestep, shape ( timesteps , enc_units )
+"""
 class Encoder( tf.keras.Model ):
 
     def __init__( self , embedding_dim , enc_units , vocab_size ):
         super(Encoder, self).__init__()
+        # An embedding layer is used to convert indices to dense vectors.
         self.embedding = Embedding( vocab_size + 1 , embedding_dim  )
+        # A Gated Recurrent Unit ( GRU )
         self.gru = GRU( units=enc_units ,
                         return_sequences=True ,
                         return_state=True ,
                         recurrent_initializer='glorot_uniform' )
 
+    # Perform a forward pass for the encoder
     def call( self , x ):
         x = self.embedding( x )
         outputs , hidden_states = self.gru( x )
@@ -27,6 +37,7 @@ class Decoder( tf.keras.Model ):
                        return_sequences=True,
                        return_state=True,
                        recurrent_initializer='glorot_uniform')
+        self.attention = DotProductAttention()
         self.linear = Dense( vocab_size )
 
 
@@ -34,10 +45,7 @@ class Decoder( tf.keras.Model ):
         # enc_outputs -> ( None , timesteps , enc_units )
         # hidden_state -> ( None , dec_units )
         # x -> ()
-        alignment_vector = tf.matmul( hidden_state , enc_outputs , transpose_b=True )
-        alignment_scores = tf.nn.softmax( alignment_vector )
-        context_vector = tf.reduce_sum( alignment_vector * alignment_scores , axis=1 )
-        context_vector = tf.expand_dims( context_vector , axis=1 )
+        context_vector = self.attention( enc_outputs , hidden_state )
         x = self.embedding(x)
         x = tf.concat( [ context_vector , x ] , axis=-1 )
         output , state = self.gru( x )
@@ -45,6 +53,8 @@ class Decoder( tf.keras.Model ):
         x = self.linear( output )
         return x , state
 
+
+# Building the encoder and decoder model with well-defined input shapes and outputs
 def build_encoder( embedding_dims , enc_units , vocab_size , input_max_len ):
     inputs = Input( shape=( input_max_len , ) )
     outputs , hidden_states = Encoder( embedding_dims , enc_units , vocab_size )( inputs )
