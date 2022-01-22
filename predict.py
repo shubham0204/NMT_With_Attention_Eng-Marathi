@@ -2,7 +2,9 @@
 
 from model_config import read_config
 from layers import build_decoder , build_encoder
+from preprocessing import load_corpus_processor
 import tensorflow as tf
+import numpy as np
 import argparse
 import os
 
@@ -32,6 +34,17 @@ decoder = build_decoder(
 encoder.load_weights( enc_latest_model_path )
 decoder.load_weights( dec_latest_model_path )
 
+eng_processor = load_corpus_processor( config[ 'eng_processor_path' ] )
+marathi_processor = load_corpus_processor( config[ 'marathi_processor_path' ] )
 
+input_sent = input( 'Enter sentence :' )
+input_sent = eng_processor.texts_to_sequences( [ input_sent ] )
 
-
+enc_outputs, enc_hidden_state = encoder( np.array( input_sent ) )
+dec_input = np.array( [ [ 1.0 ] ] )
+dec_hidden_state = enc_hidden_state
+for t in range(1, marathi_processor.max_len):
+    predictions, dec_hidden_state = decoder( [dec_input, dec_hidden_state, enc_outputs] )
+    word = marathi_processor.index2word[ np.argmax( predictions ) ]
+    print( word )
+    dec_input = np.array( [ [ np.argmax( predictions ) ] ] )

@@ -4,6 +4,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 import tensorflow as tf
 import pandas as pd
 import re
+import pickle
 
 
 """
@@ -23,21 +24,25 @@ class CorpusProcessor:
         sentences have different processing methods
     """
     def __init__( self , corpus , lang ):
-        self.START_TAG = '<start>'
-        self.END_TAG = '<end>'
+        self.START_TAG , self.START_TAG_INDEX = '<start>' , 1
+        self.END_TAG , self.END_TAG_INDEX = '<end>' , 2
         self.PADDING = '<pad>'
         self.lang = lang
-        self.max_len = 0
+        self.max_len = None
         self.vocab = [ self.PADDING , self.START_TAG , self.END_TAG ]
         self.word2index = { self.PADDING : 0 , self.START_TAG : 1 , self.END_TAG : 2  }
         self.index2word = { 0 : self.PADDING , 1 : self.START_TAG , 2 : self.END_TAG }
         self.word2index , self.index2word = self.build_vocab( corpus )
 
-    def texts_to_sequences( self , eng_sentences ):
+    def texts_to_sequences( self , eng_sentences , add_tags=True ):
         out = []
         for sent in eng_sentences:
-            out.append( self.tokens_to_indices( [ self.START_TAG ] + self.process( sent ) + [ self.END_TAG ] ) )
-        self.max_len = max( len(s) for s in out )
+            if add_tags:
+                out.append( self.tokens_to_indices( [ self.START_TAG ] + self.process( sent ) + [ self.END_TAG ] ) )
+            else:
+                out.append( self.tokens_to_indices( self.process( sent ) ) )
+        if self.max_len is None:
+            self.max_len = max( len(s) for s in out )
         out = pad_sequences( out , maxlen=self.max_len , padding='post' )
         return out
 
@@ -63,6 +68,10 @@ class CorpusProcessor:
             sent_tokens.append( self.process( sent ) )
         return sent_tokens
 
+    def save(self, filename):
+        with open(filename, 'wb') as fp:
+            pickle.dump(self, fp)
+
     def process( self , sentence ):
         if self.lang == 'eng':
             sentence = sentence.strip().lower()
@@ -72,13 +81,21 @@ class CorpusProcessor:
             sentence = re.sub(r'[२३०८१५७९४६!.?,;]', '', sentence)
         return sentence.split()
 
-
     def tokens_to_indices( self , sent_tokens ):
-        return [ self.word2index[ token ] for token in sent_tokens ]
+        try:
+            return [ self.word2index[ token] for token in sent_tokens if token in self.word2index ]
+        except KeyError:
+            return
+
+
 
     def indices_to_tokens( self , sent_indices ):
         return [ self.index2word[ index ] for index in sent_indices ]
 
+
+def load_corpus_processor( filename):
+    with open(filename, 'rb') as fp:
+        return pickle.load(fp)
 
 def read_txt( filename , num_lines=None ):
     sentences = pd.read_csv( filename , header=None , encoding='utf8' , sep='\t' ).sample( frac=1. ).values
@@ -90,7 +107,6 @@ def read_txt( filename , num_lines=None ):
 def create_train_test_ds( eng_sentences , marathi_sentences , test_frac=0.3 ):
     ds = tf.data.Dataset.from_tensor_slices( ( eng_sentences , marathi_sentences ) )
     num_test_samples = int( ds.cardinality().numpy() * test_frac )
-    ds = ds.shuffle( buffer_size=10000 )
     test_ds = ds.take( num_test_samples )
     train_ds = ds.skip( num_test_samples )
     return train_ds , test_ds

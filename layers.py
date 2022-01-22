@@ -32,13 +32,13 @@ class Decoder( tf.keras.Model ):
 
     def __init__( self , embedding_dim , dec_units , vocab_size ):
         super(Decoder, self).__init__()
-        self.embedding = Embedding(vocab_size + 1, embedding_dim)
+        self.embedding = Embedding(vocab_size + 1, embedding_dim )
         self.gru = GRU(units=dec_units,
                        return_sequences=True,
                        return_state=True,
                        recurrent_initializer='glorot_uniform')
         self.attention = DotProductAttention()
-        self.linear = Dense( vocab_size )
+        self.linear = Dense( vocab_size , activation='softmax' )
 
 
     def call(self , x , hidden_state , enc_outputs ):

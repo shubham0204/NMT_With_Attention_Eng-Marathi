@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "C:\Users\equip\AppData\Local\Programs\Python\Python39\lib\runpy.py", line 188, in _run_module_as_main
+    mod_name, mod_spec, code = _get_module_details(mod_name, _Error)
+  File "C:\Users\equip\AppData\Local\Programs\Python\Python39\lib\runpy.py", line 111, in _get_module_details
+    __import__(pkg_name)
+  File "E:\PyCharmProjects\AttentionMechanism\train.py", line 42, in <module>
+    os.mkdir( os.path.join( model_dir , 'weights' , run_name , 'encoder' ) )
+FileNotFoundError: [WinError 3] The system cannot find the path specified: 'my_models\\weights\\rich-feather-8\\encoder'

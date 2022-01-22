@@ -7,7 +7,7 @@ def get_padding_mask(x):
 
 def sparse_categorical_ce( predictions , targets ):
     padding_mask = get_padding_mask( targets )
-    loss = SparseCategoricalCrossentropy( from_logits=True )( targets , predictions )
+    loss = SparseCategoricalCrossentropy()( targets , predictions )
     loss = loss * padding_mask
     return tf.reduce_sum( loss )
 

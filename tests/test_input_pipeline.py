@@ -9,7 +9,7 @@ t1 = time.time()
 num_lines = None
 batch_size = 256
 
-eng_sentences , marathi_sentences = read_txt( 'mar.txt' , num_lines )
+eng_sentences , marathi_sentences = read_txt('../mar.txt', num_lines)
 
 eng_processor = CorpusProcessor( eng_sentences , lang='eng' )
 marathi_processor = CorpusProcessor( marathi_sentences , lang='mar' )

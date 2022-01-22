@@ -1,8 +1,8 @@
 
-from preprocessing import CorpusProcessor
+from preprocessing import CorpusProcessor , load_corpus_processor
 import pandas as pd
 
-sentences = pd.read_csv('tests/mar.txt', sep='\t', encoding='utf8', header=None).sample( frac=1. ).values
+sentences = pd.read_csv('../mar.txt', sep='\t', encoding='utf8', header=None).sample(frac=1.).values
 eng_sentences = sentences[ : , 0 ]
 marathi_sentences = sentences[ : , 1 ]
 

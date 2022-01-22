@@ -1,0 +1,5 @@
+
+Epoch 1 -----------------------------------------
+step 1 --------------------------------- loss=0.14103621244430542
+Model weights saved.
+C:\Users\equip\AppData\Local\Programs\Python\Python39\python.exe: Error while finding module specification for 'train.py' (ModuleNotFoundError: __path__ attribute not found on 'train' while trying to find 'train.py'). Try using 'train' instead of 'train.py' as the module name.
