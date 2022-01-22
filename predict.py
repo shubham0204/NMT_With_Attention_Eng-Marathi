@@ -10,9 +10,12 @@ import os
 
 parser = argparse.ArgumentParser( 'Python script to train the NMT model.' )
 parser.add_argument( '--config_path' , type=str )
+parser.add_argument( '--input_sent' , type=str )
 args = parser.parse_args()
 
 config = read_config( args.config_path )
+input_sent = args.input_sent
+
 enc_latest_model_path = tf.train.latest_checkpoint(
     os.path.join( config[ 'model_dir' ] , 'weights' , config[ 'run_name'] , 'encoder' ))
 dec_latest_model_path = tf.train.latest_checkpoint(
@@ -37,14 +40,16 @@ decoder.load_weights( dec_latest_model_path )
 eng_processor = load_corpus_processor( config[ 'eng_processor_path' ] )
 marathi_processor = load_corpus_processor( config[ 'marathi_processor_path' ] )
 
-input_sent = input( 'Enter sentence :' )
 input_sent = eng_processor.texts_to_sequences( [ input_sent ] )
 
 enc_outputs, enc_hidden_state = encoder( np.array( input_sent ) )
 dec_input = np.array( [ [ 1.0 ] ] )
 dec_hidden_state = enc_hidden_state
+output = ''
 for t in range(1, marathi_processor.max_len):
     predictions, dec_hidden_state = decoder( [dec_input, dec_hidden_state, enc_outputs] )
     word = marathi_processor.index2word[ np.argmax( predictions ) ]
-    print( word )
+    if word == marathi_processor.END_TAG:
+        break
+    output += ' {}'.format( word )
     dec_input = np.array( [ [ np.argmax( predictions ) ] ] )
